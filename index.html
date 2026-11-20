@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Distracted Driver Detection</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; margin: 0; padding: 50px; }
+        .card { background: white; max-width: 500px; margin: auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        input[type="file"] { margin: 20px 0; }
+        #result { margin-top: 20px; font-size: 1.2em; font-weight: bold; }
+        .safe { color: #2ecc71; }
+        .distracted { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🚗 Distracted Driver AI</h2>
+        <p>Upload a driving snapshot to check for distraction status.</p>
+        
+        <input type="file" id="imageInput" accept="image/*"><br>
+        <button onclick="uploadImage()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Analyze Image</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function uploadImage() {
+            const input = document.getElementById('imageInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (input.files.length === 0) {
+                alert("Please select an image first!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", input.files[0]);
+
+            resultDiv.innerHTML = "Analyzing...";
+
+            try {
+                // Change URL to your backend server (e.g., Render, Railway, or localhost:8000)
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                const statusClass = data.is_distracted ? 'distracted' : 'safe';
+                const statusText = data.is_distracted ? '⚠️ DISTRACTED DRIVER' : '✅ SAFE DRIVING';
+                
+                resultDiv.innerHTML = `
+                    <div class="${statusClass}">${statusText}</div>
+                    <p>Behavior: ${data.prediction}</p>
+                    <p>Confidence: ${data.confidence}%</p>
+                `;
+            } catch (err) {
+                resultDiv.innerHTML = "Error connecting to backend server.";
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
